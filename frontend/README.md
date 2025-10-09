@@ -40,3 +40,34 @@ This is what the generated HTML looks like unaltered:
 - We'll extract our styles into its own stylesheet after we are happy with our HTML markup
 - We'll simplfy our HTML markup css selector to be as minimal as possible.
 - For the HTML page I'll use soft tabs two spaces because I mostly code in Ruby and that's the standard tab format.
+
+## Serve Static Website Locally
+
+We need to serve our static website locally so we can start using stylesheets
+externally from our HTML page in a Cloud Developer Enviroment (CDE).
+
+> This is not necessary with local development.
+
+Assuming we have node install we'll use the simple web-server http-server
+
+### Install HTTP Server
+```sh
+npm i http-server -g
+```
+
+https://www.npmjs.com/package/http-server
+
+### Server Website
+
+http-server will server a public folder by default where
+the command is run.
+
+```sh
+cd frontend
+http-server
+```
+
+## Image Size Considerations
+
+I have background texture that was 14MB.
+I'm going to optimize it to webp with an online tool.

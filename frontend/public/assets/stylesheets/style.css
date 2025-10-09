@@ -1,0 +1,61 @@
+* {
+  box-sizing: border-box;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  margin: 0px;
+  padding: 0px;
+  background: #E5E8EB url('/assets/images/textured-mulberry-paper.webp');
+  background-size: 50%;
+}
+
+
+h1,h2,h3,h4,h5 {
+  margin: 0px;
+}
+
+main {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+header {
+  background: rgb(0,0,0);
+  flex-shrink: 1;
+}
+
+header nav {
+  display: flex;
+  flex-direction: row;
+}
+
+header nav a {
+  padding: 24px;
+  color: rgb(255,255,255);
+}
+
+
+div.content_wrap {
+  padding: 32px;
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+}
+div.content {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+}
+
+article {
+  width: 1100px;
+  background: rgb(255,255,255);
+  box-shadow: 0px 1px 9px 1px rgba(0, 0, 0, 0.5);
+  padding: 24px;
+}
