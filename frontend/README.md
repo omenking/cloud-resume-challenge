@@ -71,3 +71,11 @@ http-server
 
 I have background texture that was 14MB.
 I'm going to optimize it to webp with an online tool.
+
+## Frontend Framework Consideration
+
+- Choose to use React because its the most popular javascript framework.
+- Choose to use Vite.js over webpack because our frontend is very simple
+- Configured React Router V7, decided to use declartive mode because again our app is very simple.
+
+
