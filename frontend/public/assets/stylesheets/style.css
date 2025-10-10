@@ -17,6 +17,10 @@ h1,h2,h3,h4,h5 {
   margin: 0px;
 }
 
+p {
+  margin: 0px;
+}
+
 main {
   height: 100%;
   width: 100%;
@@ -39,7 +43,29 @@ header nav a {
   padding: 24px;
   color: rgb(255,255,255);
 }
+header nav a.active {
+  background: rgba(255,255,255,0.2)
+}
 
+ul {
+  margin: 0px;
+  padding-left: 32px;
+}
+li {
+  padding-bottom: 2px;
+}
+
+.disclaimer {
+  background: rgb(255,255,0);
+  color: rgba(0,0,0,0.8);
+  border: solid 1px rgba(0,0,0,0.1);
+  border-bottom: solid 1px rgba(0,0,0,0.4);
+  border-right: solid 1px rgba(0,0,0,0.2);
+  padding: 8px;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 14px;
+}
 
 div.content_wrap {
   padding: 32px;
@@ -54,8 +80,50 @@ div.content {
 }
 
 article {
-  width: 1100px;
+  width: 1000px;
   background: rgb(255,255,255);
   box-shadow: 0px 1px 9px 1px rgba(0, 0, 0, 0.5);
   padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+body[location='resume'] section.header {
+  text-align: center;
+  padding-bottom: 12px;
+}
+
+body[location='resume'] section h2 {
+  border-bottom: solid 1px rgb(0,0,0);
+  padding: 8px 0px;
+  font-size: 16px;
+  text-transform: uppercase;
+}
+
+body[location='resume'] section h3 {
+  font-size: 16px;
+}
+
+body[location='resume'] .item {
+  padding: 12px 0px
+}
+
+body[location='resume'] .item_heading {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+body[location='resume'] .item_heading .info,
+body[location='resume'] .item_heading .details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+body[location='resume'] .item_heading .details {
+  text-align: right;
+}
+body[location='resume'] .item_heading .details .duration {
+  font-style: italic;
 }
