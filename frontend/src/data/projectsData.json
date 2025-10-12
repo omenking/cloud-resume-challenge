@@ -1,0 +1,37 @@
+[
+  {
+    "name": "Cruddur",
+    "handle": "cruddur",
+    "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse bibendum neque eget elit ullamcorper, eu consectetur augue facilisis. Nunc pellentesque lectus ac elit faucibus eleifend. Donec ac risus at orci mollis blandit. Aenean rhoncus facilisis neque, posuere viverra sapien scelerisque sit amet. Nullam eu laoreet dolor, id egestas massa.",
+    "thumbnail": "https://placehold.co/320x200",
+    "body_html": "<h1>My Project</h1>\n<p>Welcome to <strong>My Project</strong>! This project does the following:</p>\n<ul>\n<li>Parses JSON files  </li>\n<li>Converts <em>Markdown</em> to HTML  </li>\n<li>Outputs a new file with <code>body_html</code></li>\n</ul>\n<h2>Example Code</h2>\n<p><code>python\nprint(\"Hello, world!\")</code></p>\n<blockquote>\n<p>Written by Andrew Brown</p>\n</blockquote>"
+  },
+  {
+    "name": "Swap N Pop",
+    "handle": "swap-n-pop",
+    "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse bibendum neque eget elit ullamcorper, eu consectetur augue facilisis. Nunc pellentesque lectus ac elit faucibus eleifend. Donec ac risus at orci mollis blandit. Aenean rhoncus facilisis neque, posuere viverra sapien scelerisque sit amet. Nullam eu laoreet dolor, id egestas massa.",
+    "thumbnail": "https://placehold.co/320x200",
+    "body_html": "<h1>My Project</h1>\n<p>Welcome to <strong>My Project</strong>! This project does the following:</p>\n<ul>\n<li>Parses JSON files  </li>\n<li>Converts <em>Markdown</em> to HTML  </li>\n<li>Outputs a new file with <code>body_html</code></li>\n</ul>\n<h2>Example Code</h2>\n<p><code>python\nprint(\"Hello, world!\")</code></p>\n<blockquote>\n<p>Written by Andrew Brown</p>\n</blockquote>"
+  },
+  {
+    "name": "Hajimari",
+    "handle": "hajimari",
+    "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse bibendum neque eget elit ullamcorper, eu consectetur augue facilisis. Nunc pellentesque lectus ac elit faucibus eleifend. Donec ac risus at orci mollis blandit. Aenean rhoncus facilisis neque, posuere viverra sapien scelerisque sit amet. Nullam eu laoreet dolor, id egestas massa.",
+    "thumbnail": "https://placehold.co/320x200",
+    "body_html": "<h1>My Project</h1>\n<p>Welcome to <strong>My Project</strong>! This project does the following:</p>\n<ul>\n<li>Parses JSON files  </li>\n<li>Converts <em>Markdown</em> to HTML  </li>\n<li>Outputs a new file with <code>body_html</code></li>\n</ul>\n<h2>Example Code</h2>\n<p><code>python\nprint(\"Hello, world!\")</code></p>\n<blockquote>\n<p>Written by Andrew Brown</p>\n</blockquote>"
+  },
+  {
+    "name": "ExamPro",
+    "handle": "exampro",
+    "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse bibendum neque eget elit ullamcorper, eu consectetur augue facilisis. Nunc pellentesque lectus ac elit faucibus eleifend. Donec ac risus at orci mollis blandit. Aenean rhoncus facilisis neque, posuere viverra sapien scelerisque sit amet. Nullam eu laoreet dolor, id egestas massa.",
+    "thumbnail": "https://placehold.co/320x200",
+    "body_html": "<h1>My Project</h1>\n<p>Welcome to <strong>My Project</strong>! This project does the following:</p>\n<ul>\n<li>Parses JSON files  </li>\n<li>Converts <em>Markdown</em> to HTML  </li>\n<li>Outputs a new file with <code>body_html</code></li>\n</ul>\n<h2>Example Code</h2>\n<p><code>python\nprint(\"Hello, world!\")</code></p>\n<blockquote>\n<p>Written by Andrew Brown</p>\n</blockquote>"
+  },
+  {
+    "name": "Markadee",
+    "handle": "markadee",
+    "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse bibendum neque eget elit ullamcorper, eu consectetur augue facilisis. Nunc pellentesque lectus ac elit faucibus eleifend. Donec ac risus at orci mollis blandit. Aenean rhoncus facilisis neque, posuere viverra sapien scelerisque sit amet. Nullam eu laoreet dolor, id egestas massa.",
+    "thumbnail": "https://placehold.co/320x200",
+    "body_html": "<h1>My Project</h1>\n<p>Welcome to <strong>My Project</strong>! This project does the following:</p>\n<ul>\n<li>Parses JSON files  </li>\n<li>Converts <em>Markdown</em> to HTML  </li>\n<li>Outputs a new file with <code>body_html</code></li>\n</ul>\n<h2>Example Code</h2>\n<p><code>python\nprint(\"Hello, world!\")</code></p>\n<blockquote>\n<p>Written by Andrew Brown</p>\n</blockquote>"
+  }
+]

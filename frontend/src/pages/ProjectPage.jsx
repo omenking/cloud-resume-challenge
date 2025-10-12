@@ -1,6 +1,6 @@
 import React from "react";
 import 'css/pages/projects.css'
-import projectsData from 'data/projectsData'
+import projectsData from 'data/projectsData.json'
 import { useParams } from "react-router-dom";
 import { ChevronLeft } from 'lucide-react';
 import { NavLink } from "react-router-dom";
@@ -17,6 +17,7 @@ export default function ProjectPage() {
       </NavLink>
       <h1>{project.name}</h1>
       <p>{project.description}</p>
+      <div className="markdown" dangerouslySetInnerHTML={{ __html: project.body_html }} />
     </>
   )
 }
