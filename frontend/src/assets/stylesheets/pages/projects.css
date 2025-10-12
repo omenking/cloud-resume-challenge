@@ -1,0 +1,58 @@
+@import './../breakpoints.css';
+
+body[location='projects'] {
+  .projects {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+  .project_item {
+    display: flex;
+    .thumb {
+      flex-shrink: 1;
+      width: 100%;
+    }
+    .project_info {
+      display: flex;
+      flex-direction: column;
+      .bttn {
+        margin-top: 8px;
+      }
+      p {
+        line-height: 1.5em;
+      }
+    }
+  }
+}
+
+@media (--small-only) {
+  body[location='projects'] {
+    article {
+      padding: 0px;
+    }
+    .project_item {
+      flex-direction: column;
+      gap: 16px;
+      border-bottom: solid 1px rgb(220,220,220);
+      .thumb img {
+        width: 100%;
+      }
+      .project_info {
+        order: 2;
+        padding: 16px;
+        .bttn {
+          align-self: center;
+        }
+      }
+    }
+  }
+}
+
+@media (--medium-up) {
+  body[location='projects'] {
+    .project_item {
+      flex-direction: row;
+      gap: 16px;
+    }
+  }
+}

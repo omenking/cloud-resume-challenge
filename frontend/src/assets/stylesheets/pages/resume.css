@@ -1,0 +1,81 @@
+@import './../breakpoints.css';
+
+body[location='resume'] {
+  section.header {
+    text-align: center;
+    padding-bottom: 12px;
+    p {
+      display: flex;
+      gap: 8px;
+    }
+  }
+
+  section {
+    h2 {
+      border-bottom: solid 1px rgb(0,0,0);
+      padding: 8px 0px;
+      font-size: 16px;
+      text-transform: uppercase;
+    }
+    h3 {
+      font-size: 16px;
+    }
+  }
+
+
+  .item {
+    padding: 12px 0px
+  }
+
+  .item_heading {
+    display: flex;
+    .info, .details {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .details .duration {
+      font-style: italic;
+    }
+  }
+}
+
+@media (--small-only) {
+  body[location='resume'] {
+    section.header {
+      p {
+        flex-direction: column;
+        span.bull { display: none; }
+      }
+    }
+    .item_heading {
+      flex-direction: column;
+      .details {
+        flex-direction: row !important;
+        justify-content: space-between;
+        padding: 12px 0px;
+      }
+    }
+  }
+}
+
+@media (--medium-up) {
+  body[location='resume'] {
+    section.header {
+      p {
+        flex-direction: row;
+        justify-content: center;
+        br {
+          display: none;
+        }
+      }
+    }
+    .item_heading {
+      flex-direction: row;
+      justify-content: space-between;
+      .details {
+        text-align: right;
+      }
+    }
+  }
+}
