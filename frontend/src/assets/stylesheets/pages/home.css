@@ -1,0 +1,5 @@
+body[location='home'] {
+  .intro_video img {
+    width: 100%;
+  }
+}

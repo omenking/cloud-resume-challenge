@@ -4,7 +4,7 @@ export default function Header() {
   return (
     <header>
       <nav>
-        <NavLink to="/">Home</NavLink>
+        <NavLink to="/">Blog</NavLink>
         <NavLink to="/resume">Résumé</NavLink>
         <NavLink to="/projects">Projects</NavLink>
       </nav>
