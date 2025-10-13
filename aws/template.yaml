@@ -1,0 +1,11 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Infrastructure for Cloud Resume.
+Parameters:
+  BucketName:
+    Type: string
+
+Resources:
+  Bucket:
+    Properties:
+      Type: AWS::S3::Bucket
+      BucketName: !Ref BucketName

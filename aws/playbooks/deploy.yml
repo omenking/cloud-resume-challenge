@@ -1,0 +1,29 @@
+---
+- name: Deploy CloudFormation stack
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    template_path: "{{ (playbook_dir, '..', 'template.yaml') | path_join | realpath }}"
+    parameters_file: "{{ (playbook_dir, '..', 'vars', 'parameters.yml') | path_join | realpath }}"
+    cfn_parameters: {}
+  vars_files:
+    - vaults/prod.yml
+  tasks:
+    - name: Deploy/Update stack
+      amazon.aws.cloudformation:
+        aws_access_key: "{{ AWS_ACCESS_KEY_ID }}"
+        aws_secret_key: "{{ AWS_SECRET_ACCESS_KEY }}"
+        stack_name: "{{ STACK_NAME }}"
+        state: present
+        region: "{{ AWS_REGION }}"
+        template: "{{ template_path }}"
+        template_parameters: "{{ cfn_parameters }}"
+        capabilities:
+          - CAPABILITY_NAMED_IAM
+          - CAPABILITY_AUTO_EXPAND
+        on_create_failure : DO_NOTHING
+      register: cfn_result
+    - name: Show stack outputs
+      debug:
+        var: cfn_result.stack_outputs
