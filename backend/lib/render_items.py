@@ -20,7 +20,7 @@ def render_items(folder):
 
       front_matter, body = match.groups()
       metadata = yaml.safe_load(front_matter)
-      metadata["body_html"] = markdown.markdown(body)
+      metadata["body_html"] = markdown.markdown(body,extensions=["fenced_code", "codehilite"])
       items.append(metadata)
 
   with open(output_path, 'w', encoding='utf-8') as f:

@@ -2,4 +2,46 @@ body[location='home'] {
   .intro_video img {
     width: 100%;
   }
+  .links {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 16px;
+    a {
+      background: rgb(0,0,0);
+      color: rgb(255,255,255);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 64px;
+      height: 64px;
+      border-radius: 999px;
+      span.name {
+        display: none
+      }
+    }
+  }
+  .posts {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    .post_item {
+      display: flex;
+      flex-direction: row;
+      color: rgb(0,0,0);
+      text-decoration: none;
+      gap: 8px;
+      .name {
+        order: 2;
+        font-weight: 600;
+      }
+      .date {
+        order: 1;
+      }
+      &:hover {
+        text-decoration: underline;
+      }
+
+    }
+  } 
 }

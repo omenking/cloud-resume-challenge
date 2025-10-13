@@ -15,7 +15,7 @@ export default function ProjectPage() {
         <ChevronLeft />
         Back to all projects
       </NavLink>
-      <h1>{project.name}</h1>
+      <h1 className='fancy'>Project: {project.name}</h1>
       <p>{project.description}</p>
       <div className="markdown" dangerouslySetInnerHTML={{ __html: project.body_html }} />
     </>

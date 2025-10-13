@@ -1,0 +1,7 @@
+body[location='blog_post'] {
+  .date {
+    text-align: center;
+    font-size: 18px;
+    color: rgb(160,160,160);
+  }
+}

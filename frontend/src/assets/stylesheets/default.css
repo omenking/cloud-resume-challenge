@@ -19,6 +19,15 @@ h1,h2,h3,h4,h5 {
   margin: 0px;
 }
 
+h1.fancy {
+  text-align: center;
+  font-family: "Rubik Distressed", system-ui;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 60px;
+  line-height: 1em;
+}
+
 p {
   margin: 0px;
 }
@@ -105,7 +114,7 @@ div.content {
 
 article {
   background: rgb(255,255,255);
-  padding: 24px;
+  padding: 48px;
   display: flex;
   flex-direction: column;
   gap: 16px;

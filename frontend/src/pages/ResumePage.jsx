@@ -10,6 +10,7 @@ export default function ResumePage() {
 
   return (
     <>
+      <h1 className='fancy'>Andrew Brown's Résumé</h1>
       <ResumeHeader person={resumeData.person}></ResumeHeader>
       <ResumeSection title='Education' handle='education' section={resumeData.sections.education} />
       <ResumeSection title='Experience' handle='experience' section={resumeData.sections.experience} />
