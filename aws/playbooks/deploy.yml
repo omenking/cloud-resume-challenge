@@ -14,11 +14,11 @@
   tasks:
     - name: Deploy or Update stack
       amazon.aws.cloudformation:
+        region: "{{ AWS_REGION }}"
         aws_access_key: "{{ AWS_ACCESS_KEY_ID }}"
         aws_secret_key: "{{ AWS_SECRET_ACCESS_KEY }}"
         stack_name: "{{ STACK_NAME }}"
         state: present
-        region: "{{ AWS_REGION }}"
         template_body: "{{ lookup('file', template_path) }}"
         template_parameters: "{{ cfn_parameters }}"
         capabilities:
