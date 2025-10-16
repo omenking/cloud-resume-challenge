@@ -2,10 +2,119 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: Infrastructure for Cloud Resume.
 Parameters:
   BucketName:
-    Type: string
-
+    Type: String
+  ACMCertificateArn:
+    Type: String
 Resources:
-  Bucket:
+  ApexBucket:
+    # https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-s3-bucket.html
+    Type: AWS::S3::Bucket
     Properties:
-      Type: AWS::S3::Bucket
       BucketName: !Ref BucketName
+      WebsiteConfiguration:
+        RedirectAllRequestsTo:
+          HostName: !Ref BucketName
+          Protocol: https
+  WwwBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "www.${BucketName}"
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        #ErrorDocument: error.html
+  #BucketPolicy:
+  #  Type: AWS::S3::BucketPolicy
+  #  Properties:
+  #    Bucket: !Ref WwwBucket
+  #    PolicyDocument:
+  #      Version: '2012-10-17'
+  #      Statement:
+  #        - Sid: AllowCloudFrontServicePrincipalReadOnly
+  #          Effect: Allow
+  #          Principal:
+  #            Service: cloudfront.amazonaws.com
+  #          Action: 
+  #            - s3:GetObject
+  #          Resource: !Sub arn:${AWS::Partition}:s3:::${BucketName}/*
+  #          Condition:
+  #            StringEquals:
+  #              AWS:SourceArn: !Sub arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}
+  #OriginAccessControl:
+  #    Type: AWS::CloudFront::OriginAccessControl
+  #    Properties:
+  #      Name: !Sub ${AWS::StackName}-oac
+  #      OriginAccessControlOriginType: s3
+  #      SigningProtocol: sigv4
+  #      SigningBehavior: always
+  #CloudFrontDistribution:
+  #  Type: AWS::CloudFront::Distribution
+  #  Properties:
+  #    DistributionConfig:
+  #      Enabled: true
+  #      Comment: !Sub CloudFront for www.${BucketName} (private, OAC)
+  #      PriceClass: PriceClass_All
+  #      DefaultRootObject: index.html
+  #      Aliases:
+  #        - !Ref BucketName
+  #      Origins:
+  #        - Id: s3Origin
+  #          DomainName: !GetAtt WwwBucket.RegionalDomainName
+  #          S3OriginConfig: {}  # required placeholder when using OAC
+  #          OriginAccessControlId: !Ref OriginAccessControl
+  #      DefaultCacheBehavior:
+  #        TargetOriginId: s3Origin
+  #        ViewerProtocolPolicy: redirect-to-https
+  #        Compress: true
+  #        AllowedMethods: [GET, HEAD, OPTIONS]
+  #        CachedMethods: [GET, HEAD, OPTIONS]
+  #        CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6        # Managed-CachingOptimized
+  #        OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf # Managed-CORS-S3Origin (safe default)
+  #      CustomErrorResponses:
+  #        # SPA-style fallback: rewrite 403/404 to /index.html with 200
+  #        - ErrorCode: 403
+  #          ResponseCode: 200
+  #          ResponsePagePath: !Sub "/index.html"
+  #          ErrorCachingMinTTL: 10
+  #        - ErrorCode: 404
+  #          ResponseCode: 200
+  #          ResponsePagePath: !Sub "/index.html"
+  #          ErrorCachingMinTTL: 10
+  #      ViewerCertificate: !If
+  #        - UseAliases
+  #        - {
+  #            AcmCertificateArn: !Ref ACMCertificateArn,
+  #            SslSupportMethod: sni-only,
+  #            MinimumProtocolVersion: TLSv1.2_2021
+  #          }
+  #        - { CloudFrontDefaultCertificate: true }
+  #      HttpVersion: http2and3
+  #      IsIPV6Enabled: true
+  #RedirectCloudFrontDistribution:
+  #  Type: AWS::CloudFront::Distribution
+  #  Properties:
+  #    DistributionConfig:
+  #      Enabled: true
+  #      Comment: !Sub Redirect www.${BucketName} -> ${BucketName}
+  #      PriceClass: PriceClass_All
+  #      Aliases:
+  #        - !Ref BucketName
+  #      Origins:
+  #        - Id: s3-www-website
+  #          DomainName: !Ref !BucketName
+  #          CustomOriginConfig:
+  #            OriginProtocolPolicy: http-only        # S3 website endpoints are HTTP-only
+  #            HTTPPort: 80
+  #            OriginSSLProtocols: [TLSv1.2]          # not used for website endpoints, but required field sometimes
+  #      DefaultCacheBehavior:
+  #        TargetOriginId: s3-www-website
+  #        ViewerProtocolPolicy: redirect-to-https
+  #        Compress: true
+  #        AllowedMethods: [GET, HEAD]
+  #        CachedMethods: [GET, HEAD]
+  #        CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6        # OK to cache redirects
+  #      ViewerCertificate:
+  #        AcmCertificateArn: !Ref ACMCertificateArn
+  #        SslSupportMethod: sni-only
+  #        MinimumProtocolVersion: TLSv1.2_2021
+  #      HttpVersion: http2and3
+  #      IsIPV6Enabled: true

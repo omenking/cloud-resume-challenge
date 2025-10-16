@@ -6,18 +6,20 @@
   vars:
     template_path: "{{ (playbook_dir, '..', 'template.yaml') | path_join | realpath }}"
     parameters_file: "{{ (playbook_dir, '..', 'vars', 'parameters.yml') | path_join | realpath }}"
-    cfn_parameters: {}
+    cfn_parameters:
+      BucketName: 'andrewbrownresume.com'
+      ACMCertificateArn: 'arn:aws:acm:us-east-1:982383527471:certificate/68327ec9-6695-4366-87d5-8aae35176daa'
   vars_files:
     - vaults/prod.yml
   tasks:
-    - name: Deploy/Update stack
+    - name: Deploy or Update stack
       amazon.aws.cloudformation:
         aws_access_key: "{{ AWS_ACCESS_KEY_ID }}"
         aws_secret_key: "{{ AWS_SECRET_ACCESS_KEY }}"
         stack_name: "{{ STACK_NAME }}"
         state: present
         region: "{{ AWS_REGION }}"
-        template: "{{ template_path }}"
+        template_body: "{{ lookup('file', template_path) }}"
         template_parameters: "{{ cfn_parameters }}"
         capabilities:
           - CAPABILITY_NAMED_IAM

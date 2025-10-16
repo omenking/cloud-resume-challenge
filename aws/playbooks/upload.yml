@@ -1,0 +1,71 @@
+---
+- name: Build Vite App and Upload to S3
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - vaults/prod.yml
+  vars:
+    bucket_name: 'www.andrewbrownresume.com'
+    project_root: "{{ playbook_dir | realpath }}/../.."
+    frontend_dir: "{{ project_root }}/frontend"
+    build_dir: "{{ frontend_dir }}/dist"
+  tasks:
+    - name: Install Node dependencies (clean, reproducible)
+      community.general.npm:
+        path: "{{ frontend_dir }}"
+        state: present
+        production: false
+        ci: true
+
+    - name: Build Vite app
+      shell: npm run build
+      args:
+        chdir: "{{ frontend_dir }}"
+
+    - name: Confirm build dir exists
+      ansible.builtin.stat:
+        path: "{{ build_dir }}"
+      register: build_stat
+
+    - name: Fail if build output missing
+      ansible.builtin.fail:
+        msg: "Build dir {{ build_dir }} not found. Check build step or paths."
+      when: not build_stat.stat.exists
+
+    - name: Sync static assets with long cache-control
+      community.aws.s3_sync:
+        region: "{{ AWS_REGION }}"
+        aws_access_key: "{{ AWS_ACCESS_KEY_ID }}"
+        aws_secret_key: "{{ AWS_SECRET_ACCESS_KEY }}"
+        bucket: "{{ bucket_name }}"
+        file_root: "{{ build_dir }}"
+        include: "assets/**"
+        delete: true
+        # For website buckets that are public:
+        # permission: public-read
+      register: sync_assets
+
+    - name: Upload index.html with no-store (SPA routing)
+      amazon.aws.s3_object:
+        region: "{{ AWS_REGION }}"
+        aws_access_key: "{{ AWS_ACCESS_KEY_ID }}"
+        aws_secret_key: "{{ AWS_SECRET_ACCESS_KEY }}"
+        bucket: "{{ bucket_name }}"
+        object: "index.html"
+        src: "{{ build_dir }}/index.html"
+        mode: put
+        # permission: public-read
+
+    - name: Sync remaining top-level files (short cache)
+      community.aws.s3_sync:
+        region: "{{ AWS_REGION }}"
+        aws_access_key: "{{ AWS_ACCESS_KEY_ID }}"
+        aws_secret_key: "{{ AWS_SECRET_ACCESS_KEY }}"
+        bucket: "{{ bucket_name }}"
+        file_root: "{{ build_dir }}"
+        exclude: |
+          assets/**
+          index.html
+        delete: false
+      register: sync_misc
