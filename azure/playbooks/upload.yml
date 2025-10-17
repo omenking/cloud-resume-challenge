@@ -1,0 +1,118 @@
+---
+- name: Build Vite App and Upload to Azure Blob
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  collections:
+    - azure.azcollection
+  #vars_files:
+  #  - vaults/prod.yml   # keep if you store secrets (e.g., SAS/conn string) here
+
+  vars:
+    # === Adjust these ===
+    resource_group: cloud-resume-challenge
+    storage_account: andrewbrowncrc2025              # existing storage account
+    container: $web                                # use $web for static website hosting (or your container name)
+    project_root: "{{ playbook_dir | realpath }}/../.."
+    frontend_dir: "{{ project_root }}/frontend"
+    build_dir: "{{ frontend_dir }}/dist"
+
+    #cdn_resource_group: "{{ resource_group }}"
+    #cdn_profile: ""          # e.g., my-cdn-profile
+    #cdn_endpoint: ""         # e.g., my-cdn-endpoint
+
+  tasks:
+    - name: Install Node dependencies (clean, reproducible)
+      community.general.npm:
+        path: "{{ frontend_dir }}"
+        state: present
+        production: false
+        ci: true
+
+    - name: Build Vite app
+      ansible.builtin.shell: npm run build
+      args:
+        chdir: "{{ frontend_dir }}"
+
+    - name: Confirm build dir exists
+      ansible.builtin.stat:
+        path: "{{ build_dir }}"
+      register: build_stat
+
+    - name: Fail if build output missing
+      ansible.builtin.fail:
+        msg: "Build dir {{ build_dir }} not found. Check build step or paths."
+      when: not build_stat.stat.exists
+
+    # ---------- Upload /assets/** with long cache-control ----------
+    - name: Upload /assets directory (long cache)
+      azure.azcollection.azure_rm_storageblob:
+        resource_group: "{{ resource_group }}"
+        storage_account_name: "{{ storage_account }}"
+        container: "{{ container }}"
+        batch_upload_src: "{{ build_dir }}/assets"
+        batch_upload_dst: "assets"
+        #overwrite: true
+        cache_control: "public, max-age=31536000, immutable"
+        auth_source: cli
+      register: upload_assets
+
+    # ---------- Upload index.html with no-store ----------
+    - name: Upload index.html (no-store)
+      azure.azcollection.azure_rm_storageblob:
+        resource_group: "{{ resource_group }}"
+        storage_account_name: "{{ storage_account }}"
+        container: "{{ container }}"
+        blob: "index.html"
+        src: "{{ build_dir }}/index.html"
+        #overwrite: true
+        cache_control: "no-store"
+        content_type: "text/html"
+        auth_source: cli
+      register: upload_index
+
+    # ---------- Upload remaining top-level files with short cache ----------
+    - name: Find top-level files (exclude assets/ and index.html)
+      ansible.builtin.find:
+        paths: "{{ build_dir }}"
+        file_type: file
+        recurse: false
+        excludes:
+          - "index.html"
+      register: top_level_files
+
+    - name: Upload top-level files (short cache)
+      azure.azcollection.azure_rm_storageblob:
+        resource_group: "{{ resource_group }}"
+        storage_account_name: "{{ storage_account }}"
+        container: "{{ container }}"
+        blob: "{{ item.path | basename }}"
+        src: "{{ item.path }}"
+        #overwrite: true
+        cache_control: "public, max-age=300"
+        auth_source: cli
+      loop: "{{ top_level_files.files }}"
+      loop_control:
+        label: "{{ item.path | basename }}"
+      register: upload_misc
+
+    - name: Summary
+      ansible.builtin.debug:
+        msg:
+          - "assets uploaded: {{ upload_assets is succeeded }}"
+          - "index.html uploaded: {{ upload_index is succeeded }}"
+          - "misc files uploaded: {{ top_level_files.files | length }}"
+
+    # ---------- OPTIONAL: Purge Azure CDN (requires Azure CLI) ----------
+    # - name: Purge Azure CDN endpoint (/*)
+    #   when:
+    #     - cdn_profile | length > 0
+    #     - cdn_endpoint | length > 0
+    #   ansible.builtin.command: >
+    #     az cdn endpoint purge
+    #     --resource-group {{ cdn_resource_group }}
+    #     --profile-name {{ cdn_profile }}
+    #     --name {{ cdn_endpoint }}
+    #     --content-paths "/*"
+    #   register: cdn_purge
+    #   changed_when: cdn_purge.rc == 0

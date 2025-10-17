@@ -1,0 +1,91 @@
+---
+- name: Deploy Storage Account via Bicep (with azure.azcollection)
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  collections:
+    - azure.azcollection
+
+  vars:
+    resource_group: cloud-resume-challenge
+    dns_zone_rg: cloud-resume-challenge
+    location: eastus
+    dns_zone_name: 'andrewbrownresume.net'
+    domain_fqdn: 'andrewbrownresume.net'
+    storage_account_name: andrewbrowncrc2025   # 3–24 chars, lowercase+digits, globally unique
+    bicep_file: "{{ playbook_dir }}/../main.bicep"
+    built_json: "{{ playbook_dir }}/../main.built.json"
+    deployment_name: "crc-deploy"
+
+  tasks:
+    - name: Compile Bicep -> ARM JSON (using bicep via Azure CLI)
+      ansible.builtin.command: >
+        az bicep build
+        --file {{ bicep_file }}
+        --outfile {{ built_json }}
+      changed_when: true
+    - name: Validate ARM template & parameters (CLI)
+      ansible.builtin.command: >
+        az deployment group validate
+        --resource-group {{ resource_group }}
+        --template-file {{ built_json }}
+        --parameters location={{ location }} storage_account_name={{ storage_account_name }} domain_fqdn={{ domain_fqdn }} dns_zone_name={{ dns_zone_name }} dns_zone_rg={{ dns_zone_rg }}
+        --output json
+      register: cli_validate
+      changed_when: false
+      failed_when: cli_validate.rc != 0
+
+    - name: What-if preview (CLI)
+      ansible.builtin.command: >
+        az deployment group what-if
+        --resource-group {{ resource_group }}
+        --template-file {{ built_json }}
+        --parameters location={{ location }} storage_account_name={{ storage_account_name }} domain_fqdn={{ domain_fqdn }} dns_zone_name={{ dns_zone_name }} dns_zone_rg={{ dns_zone_rg }}
+        --no-pretty-print
+      register: cli_whatif
+      changed_when: false
+      # don't fail the play if what-if reports changes; it's informational
+      failed_when: cli_whatif.rc != 0
+    - name: Show what-if summary
+      ansible.builtin.debug:
+        msg: "{{ cli_whatif.stdout | default('No what-if output') }}"
+
+    - name: Ensure resource group exists
+      azure.azcollection.azure_rm_resourcegroup:
+        name: "{{ resource_group }}"
+        location: "{{ location }}"
+
+    - name: Load compiled ARM template
+      ansible.builtin.set_fact:
+        arm_template: "{{ lookup('file', built_json) | from_json }}"
+
+    - name: Deploy template with parameters (via azure_rm_deployment)
+      azure.azcollection.azure_rm_deployment:
+        resource_group: "{{ resource_group }}"
+        name: "{{ deployment_name }}"
+        state: present
+        # You can also use template_link (URI). Here we inline the JSON dict:
+        template: "{{ arm_template }}"
+        deployment_mode: incremental
+        location: "{{ location }}"
+        parameters:
+          location:
+            value: "{{ location }}"
+          storage_account_name:
+            value: "{{ storage_account_name }}"
+          domain_fqdn:
+            value: "{{ domain_fqdn }}"
+          dns_zone_name:
+            value: "{{ dns_zone_name }}"
+          dns_zone_rg:
+            value: "{{ dns_zone_rg }}"
+      register: deploy_out
+
+    - name: Show deployment result summary
+      ansible.builtin.debug:
+        msg:
+          - "Deployment state: {{ deploy_out.deployment.properties.provisioningState | default('unknown') }}"
+          - "Storage Account name: {{ storage_account_name }}"
+          - "Blob Container name: {{ container_name }}"
+          - "Resource Group: {{ resource_group }}"
+          - "Location: {{ location }}"
