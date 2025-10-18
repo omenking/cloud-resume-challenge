@@ -1,1 +1,40 @@
 gcp-key.json
+
+# Local .terraform directories
+**/.terraform/
+
+# Terraform state files
+*.tfstate
+*.tfstate.*
+
+# Crash log files
+crash.log
+crash.*.log
+
+# Exclude all .tfvars files, which are likely to contain sensitive data
+*.tfvars
+*.tfvars.json
+
+# Ignore override files as they are usually used to override resources locally
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Ignore CLI configuration files
+.terraformrc
+terraform.rc
+
+# Ignore the .terraform.lock.hcl file if you are working in a team with different OS and facing issues
+# However, it is generally recommended to commit this file to ensure consistent provider versions across environments.
+# **/.terraform.lock.hcl
+
+# macOS specific files
+.DS_Store.terraform/
+.terraform/
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfvars
+*.tfvars.json
