@@ -17,9 +17,10 @@
     frontend_dir: "{{ project_root }}/frontend"
     build_dir: "{{ frontend_dir }}/dist"
 
-    #cdn_resource_group: "{{ resource_group }}"
-    #cdn_profile: ""          # e.g., my-cdn-profile
-    #cdn_endpoint: ""         # e.g., my-cdn-endpoint
+    profile_name: "fd-ql5ts7p4h26nm"    # e.g., fd-abc123
+    endpoint_name: "ep-ql5ts7p4h26nm"   # e.g., ep-abc123
+    paths:
+      - "/*"            # add more like "/index.html", "/assets/*"
 
   tasks:
     - name: Install Node dependencies (clean, reproducible)
@@ -103,16 +104,25 @@
           - "index.html uploaded: {{ upload_index is succeeded }}"
           - "misc files uploaded: {{ top_level_files.files | length }}"
 
-    # ---------- OPTIONAL: Purge Azure CDN (requires Azure CLI) ----------
-    # - name: Purge Azure CDN endpoint (/*)
-    #   when:
-    #     - cdn_profile | length > 0
-    #     - cdn_endpoint | length > 0
-    #   ansible.builtin.command: >
-    #     az cdn endpoint purge
-    #     --resource-group {{ cdn_resource_group }}
-    #     --profile-name {{ cdn_profile }}
-    #     --name {{ cdn_endpoint }}
-    #     --content-paths "/*"
-    #   register: cdn_purge
-    #   changed_when: cdn_purge.rc == 0
+    - name: Purge Azure CDN endpoint (/*)
+      when:
+        - cdn_profile | length > 0
+        - cdn_endpoint | length > 0
+      ansible.builtin.command: >
+        az cdn endpoint purge
+        --resource-group {{ cdn_resource_group }}
+        --profile-name {{ cdn_profile }}
+        --name {{ cdn_endpoint }}
+        --content-paths "/*"
+      register: cdn_purge
+      changed_when: cdn_purge.rc == 0
+    
+    - name: Purge AFD endpoint cache
+      ansible.builtin.command: >
+        az afd endpoint purge
+        --resource-group {{ resource_group }}
+        --profile-name {{ profile_name }}
+        --endpoint-name {{ endpoint_name }}
+        --content-paths {{ paths | to_json }}
+      register: purge_out
+      changed_when: purge_out.rc == 0

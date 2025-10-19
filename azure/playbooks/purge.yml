@@ -1,0 +1,31 @@
+---
+- name: Purge Azure Front Door endpoint cache
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    # You can pass these via -e on the CLI. If left blank, we’ll auto-pick the first found.
+    resource_group: cloud-resume-challenge
+    profile_name: "fd-ql5ts7p4h26nm"    # e.g., fd-abc123
+    endpoint_name: "ep-ql5ts7p4h26nm"   # e.g., ep-abc123
+    paths:
+      - "/*"            # add more like "/index.html", "/assets/*"
+
+  tasks:
+    - name: Purge AFD endpoint cache
+      ansible.builtin.command: >
+        az afd endpoint purge
+        --resource-group {{ resource_group }}
+        --profile-name {{ profile_name }}
+        --endpoint-name {{ endpoint_name }}
+        --content-paths {{ paths | to_json }}
+      register: purge_out
+      changed_when: purge_out.rc == 0
+
+    - name: Summary
+      ansible.builtin.debug:
+        msg:
+          - "Profile: {{ profile_name }}"
+          - "Endpoint: {{ endpoint_name }}"
+          - "Paths: {{ paths }}"
