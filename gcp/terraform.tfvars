@@ -1,1 +1,1 @@
-bucket_name = "andrewbrownresume.net"
+bucket_name = "andrewbrownresume.org"

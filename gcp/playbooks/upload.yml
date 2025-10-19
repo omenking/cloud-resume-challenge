@@ -1,0 +1,69 @@
+---
+- name: Build Vite App and Upload to GCS (Modern GCloud Version)
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars_files:
+    - vaults/prod.yml
+
+  vars:
+    gcp_project: "cloud-resume-challenge-475514"
+    gcs_bucket: "andrewbrownresume.org"   # existing bucket name
+    project_root: "{{ playbook_dir | realpath }}/../.."
+    frontend_dir: "{{ project_root }}/frontend"
+    build_dir: "{{ frontend_dir }}/dist"
+    sa_key_path: "{{ lookup('ansible.builtin.tempfile', state='file', suffix='.json') }}"
+
+  environment:
+    CLOUDSDK_CORE_PROJECT: "{{ gcp_project }}"
+
+  tasks:
+    - name: Ensure gcloud CLI installed
+      ansible.builtin.command: gcloud version
+      changed_when: false
+    - name: Create temp file for GCP service account key
+      ansible.builtin.tempfile:
+        state: file
+        suffix: .json
+      register: sa_key_tmp
+    - name: Write GCP service account key to temp file
+      ansible.builtin.copy:
+        dest: "{{ sa_key_tmp.path }}"
+        content: "{{ gcp_sa_key_json }}"
+        mode: '0600'
+    - name: Install Node dependencies (reproducible)
+      community.general.npm:
+        path: "{{ frontend_dir }}"
+        state: present
+        production: false
+        ci: true
+
+    - name: Build Vite app
+      ansible.builtin.shell: npm run build
+      args:
+        chdir: "{{ frontend_dir }}"
+
+    - name: Confirm build dir exists
+      ansible.builtin.stat:
+        path: "{{ build_dir }}"
+      register: build_stat
+
+    - name: Fail if build output missing
+      ansible.builtin.fail:
+        msg: "Build dir {{ build_dir }} not found. Check build step or paths."
+      when: not build_stat.stat.exists
+
+    # --- Upload to Cloud Storage ---
+    - name: Sync build output to GCS (delete removed files)
+      ansible.builtin.command: >
+        gcloud storage rsync
+        --recursive
+        --delete-unmatched-destination-objects
+        "{{ build_dir }}"
+        "gs://{{ gcs_bucket }}/"
+      register: rsync_out
+      changed_when: "'Copying' in rsync_out.stdout or 'Removing' in rsync_out.stdout"
+      environment:
+        GOOGLE_APPLICATION_CREDENTIALS: "{{ sa_key_tmp.path }}"
+

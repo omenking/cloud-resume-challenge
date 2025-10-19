@@ -9,7 +9,6 @@
   vars:
     project_path: "{{ playbook_dir }}/../"
     tf_vars_file: "{{ project_path }}/terraform.tfvars"   # optional
-    sa_key_path: "{{ lookup('ansible.builtin.tempfile', state='file', suffix='.json') }}"
 
   tasks:
     - name: Create temp file for GCP service account key
