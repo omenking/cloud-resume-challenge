@@ -1,0 +1,103 @@
+---
+- name: Deploy Azure Front Door (Standard) using Storage Static Website as origin
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    resource_group: cloud-resume-challenge
+    location_global: global
+    storage_account_name: andrewbrowncrc2025
+    domain_fqdn: "www.andrewbrownresume.net"
+    dns_zone_name: "andrewbrownresume.net"
+    dns_zone_rg: "cloud-resume-challenge"
+
+    bicep_file: "{{ playbook_dir }}/../cdn.bicep"
+    built_json: "{{ playbook_dir }}/../cdn.built.json"
+    deployment_name: "afd-deploy"
+
+  tasks:
+    - name: Read static website endpoint URL from storage
+      ansible.builtin.command: >
+        az storage account show
+        --resource-group {{ resource_group }}
+        --name {{ storage_account_name }}
+        --query "primaryEndpoints.web"
+        -o tsv
+      register: web_endpoint
+      changed_when: false
+
+    - name: Fail if static website not enabled
+      ansible.builtin.fail:
+        msg: >
+          Static Website is not enabled for '{{ storage_account_name }}' (primaryEndpoints.web is empty).
+          Run the storage playbook first.
+      when: web_endpoint.stdout | trim == ""
+
+    - name: Derive origin hostname (hostname only)
+      ansible.builtin.set_fact:
+        origin_hostname: "{{ web_endpoint.stdout | trim | regex_replace('^https?://', '') | regex_replace('/$', '') }}"
+
+    - name: Compile frontdoor.bicep -> JSON
+      ansible.builtin.command: >
+        az bicep build
+        --file {{ bicep_file }}
+        --outfile {{ built_json }}
+      changed_when: true
+
+    - name: Validate template (Front Door)
+      ansible.builtin.command: >
+        az deployment group validate
+        --resource-group {{ resource_group }}
+        --template-file {{ built_json }}
+        --parameters origin_hostname={{ origin_hostname }}
+                    domain_fqdn={{ domain_fqdn }}
+                    dns_zone_name={{ dns_zone_name }}
+                    dns_zone_rg={{ dns_zone_rg }}
+        --output json
+      changed_when: false
+
+    - name: Deploy Front Door
+      ansible.builtin.command: >
+        az deployment group create
+        --resource-group {{ resource_group }}
+        --name {{ deployment_name }}
+        --template-file {{ built_json }}
+        --parameters origin_hostname={{ origin_hostname }}
+                    domain_fqdn={{ domain_fqdn }}
+                    dns_zone_name={{ dns_zone_name }}
+                    dns_zone_rg={{ dns_zone_rg }}
+        --output json
+      register: afd_deploy
+      changed_when: afd_deploy.rc == 0
+
+    - name: Extract AFD endpoint host from outputs (if present)
+      ansible.builtin.set_fact:
+        afd_endpoint_host: "{{ (afd_deploy.stdout | from_json).properties.outputs.afd_endpoint.value | default('') }}"
+
+    #- name: Ensure CNAME for www -> AFD endpoint (optional but recommended)
+    #  when: afd_endpoint_host | length > 0
+    #  ansible.builtin.command: >
+    #    az network dns record-set cname set-record
+    #    --resource-group {{ dns_zone_rg }}
+    #    --zone-name {{ dns_zone_name }}
+    #    --record-set-name {{ domain_fqdn.split('.')[0] }}   # 'www'
+    #    --cname {{ afd_endpoint_host }}
+    #  changed_when: false
+
+    #- name: Purge AFD cache (/*) after deploy
+    #  when: afd_endpoint_host | length > 0
+    #  ansible.builtin.command: >
+    #    az afd endpoint purge
+    #    --resource-group {{ resource_group }}
+    #    --profile-name $(az afd profile list -g {{ resource_group }} --query "[0].name" -o tsv)
+    #    --endpoint-name $(az afd endpoint list -g {{ resource_group }} --profile-name $(az afd profile list -g {{ resource_group }} --query "[0].name" -o tsv) --query "[0].name" -o tsv)
+    #    --content-paths "/*"
+    #  changed_when: true
+
+    - name: Summary
+      ansible.builtin.debug:
+        msg:
+          - "Origin hostname: {{ origin_hostname }}"
+          - "AFD endpoint: {{ afd_endpoint_host | default('unknown') }}"
+          - "Custom domain: {{ domain_fqdn }}"

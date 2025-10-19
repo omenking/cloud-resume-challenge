@@ -1,0 +1,160 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.38.33.27573",
+      "templateHash": "15668141123136207980"
+    }
+  },
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "global",
+      "metadata": {
+        "description": "Front Door uses global location."
+      }
+    },
+    "origin_hostname": {
+      "type": "string",
+      "metadata": {
+        "description": "Origin hostname (e.g., mystorage.z13.web.core.windows.net)"
+      }
+    },
+    "domain_fqdn": {
+      "type": "string",
+      "metadata": {
+        "description": "Custom domain served by Front Door (use a subdomain, e.g., www.andrewbrownresume.net)"
+      }
+    },
+    "dns_zone_name": {
+      "type": "string",
+      "metadata": {
+        "description": "Azure DNS zone name (e.g., andrewbrownresume.net)"
+      }
+    },
+    "dns_zone_rg": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource group name where the Azure DNS zone lives"
+      }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Cdn/profiles",
+      "apiVersion": "2025-06-01",
+      "name": "[format('fd-{0}', uniqueString(resourceGroup().id))]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "Standard_AzureFrontDoor"
+      }
+    },
+    {
+      "type": "Microsoft.Cdn/profiles/afdEndpoints",
+      "apiVersion": "2025-06-01",
+      "name": "[format('{0}/{1}', format('fd-{0}', uniqueString(resourceGroup().id)), format('ep-{0}', uniqueString(resourceGroup().id)))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "enabledState": "Enabled"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Cdn/profiles', format('fd-{0}', uniqueString(resourceGroup().id)))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Cdn/profiles/originGroups",
+      "apiVersion": "2025-06-01",
+      "name": "[format('{0}/{1}', format('fd-{0}', uniqueString(resourceGroup().id)), 'og-default')]",
+      "properties": {
+        "loadBalancingSettings": {
+          "sampleSize": 4,
+          "successfulSamplesRequired": 3,
+          "additionalLatencyInMilliseconds": 0
+        },
+        "healthProbeSettings": {
+          "probePath": "/index.html",
+          "probeRequestType": "GET",
+          "probeProtocol": "Http",
+          "probeIntervalInSeconds": 120
+        },
+        "sessionAffinityState": "Disabled"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Cdn/profiles', format('fd-{0}', uniqueString(resourceGroup().id)))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Cdn/profiles/originGroups/origins",
+      "apiVersion": "2025-06-01",
+      "name": "[format('{0}/{1}/{2}', format('fd-{0}', uniqueString(resourceGroup().id)), 'og-default', 'origin-staticweb')]",
+      "properties": {
+        "hostName": "[parameters('origin_hostname')]",
+        "httpPort": 80,
+        "httpsPort": 443,
+        "originHostHeader": "[parameters('origin_hostname')]",
+        "priority": 1,
+        "weight": 1000
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Cdn/profiles/originGroups', format('fd-{0}', uniqueString(resourceGroup().id)), 'og-default')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Cdn/profiles/customDomains",
+      "apiVersion": "2025-06-01",
+      "name": "[format('{0}/{1}', format('fd-{0}', uniqueString(resourceGroup().id)), format('cd-{0}', uniqueString(parameters('domain_fqdn'))))]",
+      "properties": {
+        "hostName": "[parameters('domain_fqdn')]",
+        "azureDnsZone": {
+          "id": "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('dns_zone_rg')), 'Microsoft.Network/dnsZones', parameters('dns_zone_name'))]"
+        },
+        "tlsSettings": {
+          "certificateType": "ManagedCertificate",
+          "minimumTlsVersion": "TLS12"
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Cdn/profiles', format('fd-{0}', uniqueString(resourceGroup().id)))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Cdn/profiles/afdEndpoints/routes",
+      "apiVersion": "2025-04-15",
+      "name": "[format('{0}/{1}/{2}', format('fd-{0}', uniqueString(resourceGroup().id)), format('ep-{0}', uniqueString(resourceGroup().id)), 'route-static')]",
+      "properties": {
+        "originGroup": {
+          "id": "[resourceId('Microsoft.Cdn/profiles/originGroups', format('fd-{0}', uniqueString(resourceGroup().id)), 'og-default')]"
+        },
+        "supportedProtocols": [
+          "Http",
+          "Https"
+        ],
+        "httpsRedirect": "Enabled",
+        "linkToDefaultDomain": "Disabled",
+        "customDomains": [
+          {
+            "id": "[resourceId('Microsoft.Cdn/profiles/customDomains', format('fd-{0}', uniqueString(resourceGroup().id)), format('cd-{0}', uniqueString(parameters('domain_fqdn'))))]"
+          }
+        ],
+        "patternsToMatch": [
+          "/*"
+        ],
+        "forwardingProtocol": "MatchRequest",
+        "enabledState": "Enabled"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Cdn/profiles/customDomains', format('fd-{0}', uniqueString(resourceGroup().id)), format('cd-{0}', uniqueString(parameters('domain_fqdn'))))]",
+        "[resourceId('Microsoft.Cdn/profiles/afdEndpoints', format('fd-{0}', uniqueString(resourceGroup().id)), format('ep-{0}', uniqueString(resourceGroup().id)))]",
+        "[resourceId('Microsoft.Cdn/profiles/originGroups', format('fd-{0}', uniqueString(resourceGroup().id)), 'og-default')]"
+      ]
+    }
+  ],
+  "outputs": {
+    "afd_endpoint": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Cdn/profiles/afdEndpoints', format('fd-{0}', uniqueString(resourceGroup().id)), format('ep-{0}', uniqueString(resourceGroup().id))), '2025-06-01').hostName]"
+    }
+  }
+}

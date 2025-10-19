@@ -1,0 +1,101 @@
+---
+- name: Deploy Storage Account and enable Static Website
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    resource_group: cloud-resume-challenge
+    location: eastus
+    storage_account_name: andrewbrowncrc2025
+    bicep_file: "{{ playbook_dir }}/../storage.bicep"
+    built_json: "{{ playbook_dir }}/../storage.built.json"
+    deployment_name: "storage-deploy"
+
+  tasks:
+    - name: Verify Azure CLI login
+      ansible.builtin.command: az account show
+      changed_when: false
+
+    - name: Ensure resource group exists
+      ansible.builtin.command: >
+        az group create
+        --name {{ resource_group }}
+        --location {{ location }}
+        --output none
+      changed_when: false
+
+    - name: Compile storage.bicep -> JSON
+      ansible.builtin.command: >
+        az bicep build
+        --file {{ bicep_file }}
+        --outfile {{ built_json }}
+      changed_when: true
+
+    - name: Validate template (storage)
+      ansible.builtin.command: >
+        az deployment group validate
+        --resource-group {{ resource_group }}
+        --template-file {{ built_json }}
+        --parameters location={{ location }} storage_account_name={{ storage_account_name }}
+        --output json
+      changed_when: false
+
+    - name: Deploy storage account
+      ansible.builtin.command: >
+        az deployment group create
+        --resource-group {{ resource_group }}
+        --name {{ deployment_name }}
+        --template-file {{ built_json }}
+        --parameters location={{ location }} storage_account_name={{ storage_account_name }}
+        --output json
+      register: storage_deploy
+      changed_when: storage_deploy.rc == 0
+
+    - name: Is Static Website enabled?
+      ansible.builtin.command: >
+        az storage blob service-properties show
+        --account-name {{ storage_account_name }}
+        --auth-mode login
+        --query "staticWebsite.enabled"
+        -o tsv
+      register: static_enabled
+      changed_when: false
+
+    - name: Enable Static Website (index.html + 404 -> index.html)
+      when: static_enabled.stdout.strip() != 'true'
+      ansible.builtin.command: >
+        az storage blob service-properties update
+        --account-name {{ storage_account_name }}
+        --auth-mode login
+        --static-website
+        --index-document index.html
+        --404-document index.html
+      register: static_enable
+      changed_when: static_enable.rc == 0
+
+    - name: Read static website endpoint URL
+      ansible.builtin.command: >
+        az storage account show
+        --resource-group {{ resource_group }}
+        --name {{ storage_account_name }}
+        --query "primaryEndpoints.web"
+        -o tsv
+      register: web_endpoint
+      changed_when: false
+
+    - name: Fail if static website endpoint is still empty
+      ansible.builtin.fail:
+        msg: >
+          Static Website endpoint is empty. Ensure the feature is enabled and try again.
+      when: web_endpoint.stdout | trim == ""
+
+    - name: Set origin hostname fact (hostname only)
+      ansible.builtin.set_fact:
+        origin_hostname: "{{ web_endpoint.stdout | trim | regex_replace('^https?://', '') | regex_replace('/$', '') }}"
+
+    - name: Show outputs
+      ansible.builtin.debug:
+        msg:
+          - "Storage account: {{ storage_account_name }}"
+          - "Static site host: {{ origin_hostname }}"
