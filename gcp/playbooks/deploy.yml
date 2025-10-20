@@ -29,6 +29,7 @@
         variables: "{{ {'bucket_name': bucket_name} if (bucket_name is defined) else omit }}"
       environment:
         GOOGLE_APPLICATION_CREDENTIALS: "{{ sa_key_tmp.path }}"
+        TF_TOKEN_app_terraform_io: "{{ tfc_token }}"
       register: tf_apply
     - name: Show Terraform output (if any)
       ansible.builtin.debug:

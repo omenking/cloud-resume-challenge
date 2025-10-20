@@ -1,0 +1,48 @@
+---
+- name: Destroy GCS static site bucket via Terraform
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars_files:
+    - vaults/prod.yml
+  vars:
+    project_path: "{{ playbook_dir }}/../"
+    tf_vars_file: "{{ project_path }}/terraform.tfvars"   # optional
+
+  tasks:
+    - block:
+        - name: Create temp file for GCP service account key
+          ansible.builtin.tempfile:
+            state: file
+            suffix: .json
+          register: sa_key_tmp
+
+        - name: Write GCP service account key to temp file
+          ansible.builtin.copy:
+            dest: "{{ sa_key_tmp.path }}"
+            content: "{{ gcp_sa_key_json }}"
+            mode: '0600'
+
+        - name: Terraform init and destroy
+          community.general.terraform:
+            project_path: "{{ project_path }}"
+            force_init: true
+            state: absent                      # <-- destroy
+            variables: "{{ {'bucket_name': bucket_name} if (bucket_name is defined) else omit }}"
+            variables_files: >-
+              {{ [tf_vars_file] if (tf_vars_file is defined) else omit }}
+          environment:
+            GOOGLE_APPLICATION_CREDENTIALS: "{{ sa_key_tmp.path }}"
+            TF_TOKEN_app_terraform_io: "{{ tfc_token }}"
+          register: tf_destroy
+
+        - name: Show Terraform destroy output (if any)
+          ansible.builtin.debug:
+            var: tf_destroy
+
+      always:
+        - name: Remove temp GCP key
+          ansible.builtin.file:
+            path: "{{ sa_key_tmp.path | default(omit) }}"
+            state: absent

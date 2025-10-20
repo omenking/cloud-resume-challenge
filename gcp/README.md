@@ -99,3 +99,37 @@ knowledge we'll implement a more cost effective solution.
 > If you have only a single domain/site and low traffic, the fixed cost (~US $18/month) could dominate.
 
 $18 for a personaal website just have CDN is not worth it we'll attempt to use CloudFlare instead.
+
+## CloudFlare and GCP
+
+GCP expects the header to be the same the domain for static website hosting.
+If we turn of proxing for the record CNAME cloudflare we can server the domain
+however we will not get benifits of Rules, Workers, TLS/SSL, DDoS etc... and we
+would have create another GCS Bucket and upload a index.html that redirects.
+
+To properly redirect we need to create rules within CloudFlare.
+But we will need a worker to serve content from the bucket (its a js file)
+think similar to CloudFront functions.
+
+Deploy a Hello World worker template and the edit it. Use the `worker.js` to serve the buckets content.
+
+## migrate Terraform state.
+
+# Authenticate if needed
+We can't use terraform login in Github Codespaces
+
+mkdir -p ~/.terraform.d
+cat > ~/.terraform.d/credentials.tfrc.json <<'EOF'
+{
+  "credentials": {
+    "app.terraform.io": {
+      "token": "YOUR_TERRAFORM_CLOUD_TOKEN_HERE"
+    }
+  }
+}
+EOF
+
+# Reconfigure backend and migrate state in one go
+terraform init
+
+
