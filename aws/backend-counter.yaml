@@ -1,0 +1,81 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Simple counter API (Ruby + DynamoDB + HTTP API)
+
+Parameters:
+  TableName:
+    Type: String
+    Default: CounterTable
+    Description: DynamoDB table name for the counter
+  CounterPrimaryKeyValue:
+    Type: String
+    Default: global
+    Description: The partition key value used for the single counter item
+
+Globals:
+  Function:
+    Runtime: ruby3.3
+    Timeout: 10
+    MemorySize: 256
+    Architectures: [x86_64]
+    Tracing: Active
+    Environment:
+      Variables:
+        TABLE_NAME: !Ref CounterTable
+        COUNTER_PK: !Ref CounterPrimaryKeyValue
+
+Resources:
+  Api:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowOrigins: ['*']
+        AllowHeaders: ['*']
+        AllowMethods: ['GET', 'POST', 'OPTIONS']
+
+  CounterTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Ref TableName
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+      SSESpecification:
+        SSEEnabled: true
+
+  CounterFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: app.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CounterTable
+      Events:
+        GetCounter:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref Api
+            Path: /counter
+            Method: GET
+        IncrementCounter:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref Api
+            Path: /counter
+            Method: POST
+
+Outputs:
+  ApiEndpoint:
+    Description: Base URL for the HTTP API
+    Value: !Sub 'https://${Api}.execute-api.${AWS::Region}.amazonaws.com'
+  TableOut:
+    Description: DynamoDB table name
+    Value: !Ref CounterTable
+  FunctionArn:
+    Description: Lambda function ARN
+    Value: !GetAtt CounterFunction.Arn

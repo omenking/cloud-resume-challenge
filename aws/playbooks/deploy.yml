@@ -4,8 +4,7 @@
   connection: local
   gather_facts: false
   vars:
-    template_path: "{{ (playbook_dir, '..', 'template.yaml') | path_join | realpath }}"
-    parameters_file: "{{ (playbook_dir, '..', 'vars', 'parameters.yml') | path_join | realpath }}"
+    template_path: "{{ (playbook_dir, '..', 'frontend.yaml') | path_join | realpath }}"
     cfn_parameters:
       BucketName: 'andrewbrownresume.com'
       ACMCertificateArn: 'arn:aws:acm:us-east-1:982383527471:certificate/68327ec9-6695-4366-87d5-8aae35176daa'

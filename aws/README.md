@@ -48,3 +48,10 @@ We'll attempt to install directly against the ansible venv and see that resolves
 ```sh
 ansible-galaxy collection install -r requirements.txt
 ```
+
+## Install SAM CLI and AWS CLI
+
+We need to install both AWS SAM CLI and AWS CLI
+
+AWS SAM CLI expects to use a profile so even if you set the
+AWS env vars it will ignore it.

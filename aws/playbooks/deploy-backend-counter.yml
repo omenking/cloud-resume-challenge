@@ -1,0 +1,61 @@
+---
+- name: Build & deploy SAM (Ruby counter)
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    stack_name: counter-api
+    template_file: "{{ playbook_dir | realpath }}/../backend-counter.yaml"
+    parameter_overrides:
+      TableName: CounterTable
+      CounterPrimaryKeyValue: global
+    sam_build_use_container: false     # set true if you want reproducible builds without Ruby toolchain
+  vars_files:
+    - vaults/prod.yml
+  tasks:
+    - name: Ensure SAM CLI is available
+      ansible.builtin.command: sam --version
+      changed_when: false
+    - name: Validate SAM template
+      ansible.builtin.command:
+        cmd: >-
+          sam validate
+          --template-file {{ template_file }}
+          --region {{ AWS_REGION }}
+      environment:
+        AWS_REGION: "{{ AWS_REGION }}"
+        AWS_ACCESS_KEY: "{{ AWS_ACCESS_KEY_ID }}"
+        AWS_SECRET_KEY: "{{ AWS_SECRET_ACCESS_KEY }}"
+      args:
+        chdir: "{{ playbook_dir | realpath }}/.."
+
+    - name: SAM build
+      ansible.builtin.command:
+        cmd: >-
+          sam build
+          --template-file {{ template_file }}
+          {{ sam_build_use_container | ternary('--use-container', '') }}
+      environment:
+        AWS_REGION: "{{ AWS_REGION }}"
+        AWS_ACCESS_KEY: "{{ AWS_ACCESS_KEY_ID }}"
+        AWS_SECRET_KEY: "{{ AWS_SECRET_ACCESS_KEY }}"
+      args:
+        chdir: "{{ playbook_dir | realpath }}/.."
+
+    - name: SAM deploy (create/update stack)
+      ansible.builtin.command:
+        cmd: >-
+          sam deploy
+          --stack-name {{ stack_name }}
+          --region {{ AWS_REGION }}
+          --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND
+          --resolve-s3
+          --no-confirm-changeset
+          --no-fail-on-empty-changeset
+          --parameter-overrides {{ parameter_overrides | dict2items | map('join','=') | list | join(' ') }}
+      environment:
+        AWS_REGION: "{{ AWS_REGION }}"
+        AWS_ACCESS_KEY: "{{ AWS_ACCESS_KEY_ID }}"
+        AWS_SECRET_KEY: "{{ AWS_SECRET_ACCESS_KEY }}"
+      args:
+        chdir: "{{ playbook_dir | realpath }}/.."
