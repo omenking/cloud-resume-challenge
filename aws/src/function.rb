@@ -27,7 +27,7 @@ def get_count
     key: { 'pk' => pk_value },
     consistent_read: true
   )
-  count = res.item ? (res.item['count'] || 0) : 0
+  count = res.item ? (res.item['count'].to_i || 0) : 0
   response(200, { count: count })
 end
 
@@ -40,7 +40,7 @@ def increment
     expression_attribute_values: { ':incr' => 1, ':zero' => 0 },
     return_values: 'UPDATED_NEW'
   )
-  response(200, { count: res.attributes['count'] })
+  response(200, { count: res.attributes['count'].to_i })
 end
 
 def lambda_handler(event:, context:)

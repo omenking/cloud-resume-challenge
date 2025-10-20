@@ -32,6 +32,12 @@ Resources:
         AllowOrigins: ['*']
         AllowHeaders: ['*']
         AllowMethods: ['GET', 'POST', 'OPTIONS']
+      Domain:
+        DomainName: api-counter.andrewbrownresume.com
+        CertificateArn: arn:aws:acm:us-east-1:982383527471:certificate/68327ec9-6695-4366-87d5-8aae35176daa
+        EndpointConfiguration: REGIONAL
+        Route53:
+          HostedZoneId: Z069441533P5IZZ8ANX2B
 
   CounterTable:
     Type: AWS::DynamoDB::Table
@@ -51,7 +57,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/
-      Handler: app.lambda_handler
+      Handler: function.lambda_handler
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref CounterTable
