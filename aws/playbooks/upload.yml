@@ -20,7 +20,7 @@
         ci: true
 
     - name: Build Vite app
-      shell: npm run build
+      shell: npm run build_aws
       args:
         chdir: "{{ frontend_dir }}"
 

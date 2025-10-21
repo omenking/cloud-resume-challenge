@@ -29,9 +29,18 @@ Resources:
     Type: AWS::Serverless::HttpApi
     Properties:
       CorsConfiguration:
-        AllowOrigins: ['*']
-        AllowHeaders: ['*']
-        AllowMethods: ['GET', 'POST', 'OPTIONS']
+        AllowOrigins:
+          - https://www.andrewbrownresume.com
+        AllowHeaders:
+          - '*'
+        AllowMethods:
+          - GET
+          - POST
+          - OPTIONS
+      DisableExecuteApiEndpoint: true
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 5
+        ThrottlingRateLimit: 10
       Domain:
         DomainName: api-counter.andrewbrownresume.com
         CertificateArn: arn:aws:acm:us-east-1:982383527471:certificate/68327ec9-6695-4366-87d5-8aae35176daa
