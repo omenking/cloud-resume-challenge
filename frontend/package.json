@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "build_aws": "vite build --mode aws",
+    "build_azure": "vite build --mode azure",
     "lint": "eslint .",
     "preview": "vite preview"
   },

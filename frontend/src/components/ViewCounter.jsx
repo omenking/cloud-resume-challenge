@@ -4,14 +4,14 @@ export default function ViewCounter() {
   const [count, setCount] = useState(0);
   const endpoint = import.meta.env.VITE_COUNTER_ENDPOINT;
   useEffect(() => {
-    fetch(endpoint + "/counter")
+    fetch(endpoint)
       .then((res) => res.json())
       .then((data) => setCount(Number(data.count) || 0))
       .catch((err) => console.error("Error fetching count:", err));
   }, []);
 
   const increment = () => {
-    fetch(endpoint + "/counter", { method: "POST" })
+    fetch(endpoint, { method: "POST" })
       .then((res) => res.json())
       .then((data) => setCount(Number(data.count) || 0))
       .catch((err) => console.error("Error incrementing count:", err));

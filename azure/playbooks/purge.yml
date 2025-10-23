@@ -1,31 +1,29 @@
 ---
-- name: Purge Azure Front Door endpoint cache
+- name: Purge Cloudflare CDN Cache
   hosts: localhost
   connection: local
   gather_facts: false
-
+  vars_files:
+    - vaults/prod.yml
   vars:
-    # You can pass these via -e on the CLI. If left blank, we’ll auto-pick the first found.
-    resource_group: cloud-resume-challenge
-    profile_name: "fd-ql5ts7p4h26nm"    # e.g., fd-abc123
-    endpoint_name: "ep-ql5ts7p4h26nm"   # e.g., ep-abc123
-    paths:
-      - "/*"            # add more like "/index.html", "/assets/*"
+    # Replace with your own values or store them securely in an Ansible Vault
+    cloudflare_api_token: "{{ CLOUDFLARE_API_TOKEN }}"
+    cloudflare_zone_id: "{{ CLOUDFLARE_ZONE_ID }}"
 
   tasks:
-    - name: Purge AFD endpoint cache
-      ansible.builtin.command: >
-        az afd endpoint purge
-        --resource-group {{ resource_group }}
-        --profile-name {{ profile_name }}
-        --endpoint-name {{ endpoint_name }}
-        --content-paths {{ paths | to_json }}
-      register: purge_out
-      changed_when: purge_out.rc == 0
+    - name: Purge entire Cloudflare cache
+      uri:
+        url: "https://api.cloudflare.com/client/v4/zones/{{ cloudflare_zone_id }}/purge_cache"
+        method: POST
+        headers:
+          Authorization: "Bearer {{ cloudflare_api_token }}"
+          Content-Type: "application/json"
+        body_format: json
+        body:
+          purge_everything: true
+        status_code: 200
+      register: purge_response
 
-    - name: Summary
-      ansible.builtin.debug:
-        msg:
-          - "Profile: {{ profile_name }}"
-          - "Endpoint: {{ endpoint_name }}"
-          - "Paths: {{ paths }}"
+    - name: Show purge response
+      debug:
+        var: purge_response.json

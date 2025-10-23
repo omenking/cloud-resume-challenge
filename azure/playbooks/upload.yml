@@ -5,8 +5,8 @@
   gather_facts: false
   collections:
     - azure.azcollection
-  #vars_files:
-  #  - vaults/prod.yml   # keep if you store secrets (e.g., SAS/conn string) here
+  vars_files:
+    - vaults/prod.yml   # keep if you store secrets (e.g., SAS/conn string) here
 
   vars:
     # === Adjust these ===
@@ -16,7 +16,8 @@
     project_root: "{{ playbook_dir | realpath }}/../.."
     frontend_dir: "{{ project_root }}/frontend"
     build_dir: "{{ frontend_dir }}/dist"
-
+    cloudflare_api_token: "{{ CLOUDFLARE_API_TOKEN }}"
+    cloudflare_zone_id: "{{ CLOUDFLARE_ZONE_ID }}"
     profile_name: "fd-ql5ts7p4h26nm"    # e.g., fd-abc123
     endpoint_name: "ep-ql5ts7p4h26nm"   # e.g., ep-abc123
     paths:
@@ -31,7 +32,7 @@
         ci: true
 
     - name: Build Vite app
-      ansible.builtin.shell: npm run build
+      ansible.builtin.shell: npm run build_azure
       args:
         chdir: "{{ frontend_dir }}"
 
@@ -54,6 +55,7 @@
         batch_upload_src: "{{ build_dir }}/assets"
         batch_upload_dst: "assets"
         #overwrite: true
+        force: true
         cache_control: "public, max-age=31536000, immutable"
         auth_source: cli
       register: upload_assets
@@ -67,6 +69,7 @@
         blob: "index.html"
         src: "{{ build_dir }}/index.html"
         #overwrite: true
+        force: true
         cache_control: "no-store"
         content_type: "text/html"
         auth_source: cli
@@ -89,6 +92,7 @@
         container: "{{ container }}"
         blob: "{{ item.path | basename }}"
         src: "{{ item.path }}"
+        force: true
         #overwrite: true
         cache_control: "public, max-age=300"
         auth_source: cli
@@ -103,26 +107,41 @@
           - "assets uploaded: {{ upload_assets is succeeded }}"
           - "index.html uploaded: {{ upload_index is succeeded }}"
           - "misc files uploaded: {{ top_level_files.files | length }}"
+    - name: Purge entire Cloudflare cache
+      uri:
+        url: "https://api.cloudflare.com/client/v4/zones/{{ cloudflare_zone_id }}/purge_cache"
+        method: POST
+        headers:
+          Authorization: "Bearer {{ cloudflare_api_token }}"
+          Content-Type: "application/json"
+        body_format: json
+        body:
+          purge_everything: true
+        status_code: 200
+      register: purge_response
 
-    - name: Purge Azure CDN endpoint (/*)
-      when:
-        - cdn_profile | length > 0
-        - cdn_endpoint | length > 0
-      ansible.builtin.command: >
-        az cdn endpoint purge
-        --resource-group {{ cdn_resource_group }}
-        --profile-name {{ cdn_profile }}
-        --name {{ cdn_endpoint }}
-        --content-paths "/*"
-      register: cdn_purge
-      changed_when: cdn_purge.rc == 0
+    - name: Show purge response
+      debug:
+        var: purge_response.json
+    #- name: Purge Azure CDN endpoint (/*)
+    #  when:
+    #    - cdn_profile | length > 0
+    #    - cdn_endpoint | length > 0
+    #  ansible.builtin.command: >
+    #    az cdn endpoint purge
+    #    --resource-group {{ cdn_resource_group }}
+    #    --profile-name {{ cdn_profile }}
+    #    --name {{ cdn_endpoint }}
+    #    --content-paths "/*"
+    #  register: cdn_purge
+    #  changed_when: cdn_purge.rc == 0
     
-    - name: Purge AFD endpoint cache
-      ansible.builtin.command: >
-        az afd endpoint purge
-        --resource-group {{ resource_group }}
-        --profile-name {{ profile_name }}
-        --endpoint-name {{ endpoint_name }}
-        --content-paths {{ paths | to_json }}
-      register: purge_out
-      changed_when: purge_out.rc == 0
+    #- name: Purge AFD endpoint cache
+    #  ansible.builtin.command: >
+    #    az afd endpoint purge
+    #    --resource-group {{ resource_group }}
+    #    --profile-name {{ profile_name }}
+    #    --endpoint-name {{ endpoint_name }}
+    #    --content-paths {{ paths | to_json }}
+    #  register: purge_out
+    #  changed_when: purge_out.rc == 0
