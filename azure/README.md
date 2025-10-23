@@ -101,3 +101,24 @@ We observed that Azure Bicep when renaminig our container didn't
 remove the previous name one making me think that maybe containers
 just like object files should be handle by ansible if containers
 are not going to act idopodement within Azure Bicep
+
+## Azure Functions need Core Tools Tool Installed
+
+You need to install Core Tools or the deploy wont work.
+You need to install Azure Functions extension and best to
+create your Azure function from that interface.
+
+curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
+sudo mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
+sudo sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/microsoft-ubuntu-$(lsb_release -cs 2>/dev/null)-prod $(lsb_release -cs 2>/dev/null) main" > /etc/apt/sources.list.d/dotnetdev.list'
+sudo apt-get update
+sudo apt-get install azure-functions-core-tools-4
+
+## Locally Test Python Env Var
+
+```sh
+cd backend-counter
+source .venv/bin/activate
+pip install -r requirements.txt
+func start
+```

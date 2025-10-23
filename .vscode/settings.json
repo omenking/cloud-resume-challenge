@@ -1,0 +1,11 @@
+{
+  "azureFunctions.deploySubpath": "azure/backend-counter",
+  "azureFunctions.projectLanguage": "Python",
+  "azureFunctions.projectRuntime": "~4",
+  "debug.internalConsoleOptions": "neverOpen",
+  "azureFunctions.projectSubpath": "azure/backend-counter",
+  "azureFunctions.preDeployTask": "publish (functions)",
+  "azureFunctions.scmDoBuildDuringDeployment": true,
+  "azureFunctions.pythonVenv": "${workspaceFolder}/azure/backend-counter/.venv",
+  "azureFunctions.projectLanguageModel": 2
+}
