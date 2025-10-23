@@ -1,0 +1,22 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    cloud_events (0.7.1)
+    functions_framework (1.6.2)
+      cloud_events (>= 0.7.0, < 2.a)
+      puma (>= 4.3.0, < 7.a)
+      rack (>= 2.1, < 4.a)
+    nio4r (2.7.4)
+    puma (6.6.1)
+      nio4r (~> 2.0)
+    rack (3.2.3)
+
+PLATFORMS
+  ruby
+  x86_64-linux
+
+DEPENDENCIES
+  functions_framework
+
+BUNDLED WITH
+   2.6.2

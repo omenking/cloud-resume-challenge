@@ -1,0 +1,45 @@
+swagger: "2.0"
+info:
+  title: "${TITLE}"
+  version: "1.0.0"
+
+# Simple CORS preflight
+x-google-endpoints:
+- name: "${TITLE}"
+schemes:
+- https
+produces:
+- application/json
+consumes:
+- application/json
+
+paths:
+  /v1/counter:
+    get:
+      operationId: counter
+      security:
+        - google_id_token: []
+      x-google-backend:
+        address: "${BACKEND_URL}"
+        jwt_audience: "${AUDIENCE}"
+      responses:
+        "200":
+          description: OK
+    options:
+      summary: CORS support
+      operationId: corsCounter
+      responses:
+        "204":
+          description: No Content
+      x-google-backend:
+        address: "${BACKEND_URL}"
+
+securityDefinitions:
+  google_id_token:
+    authorizationUrl: ""
+    flow: "implicit"
+    type: "oauth2"
+    # API Gateway will mint a Google-signed ID token using the configured service account.
+    x-google-issuer: "https://sts.google.com"
+    x-google-jwks_uri: "https://www.googleapis.com/oauth2/v3/certs"
+    x-google-audiences: "${AUDIENCE}"

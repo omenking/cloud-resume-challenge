@@ -1,0 +1,121 @@
+---
+- name: Package and upload Cloud Functions (Gen2) Ruby source to GCS
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - vaults/prod.yml
+  vars:
+    project_path: "{{ playbook_dir }}/../"
+    gcp_project: "cloud-resume-challenge-475514"
+    region: "us-east1"
+    gcs_bucket: "crc-func-12353" 
+    function_src_dir: "{{ project_path }}/function"   
+    dist_dir: "{{ project_path }}/.dist"
+    zip_path: "{{ dist_dir }}/function.zip"
+    sa_key_path: "{{ lookup('ansible.builtin.tempfile', state='file', suffix='.json') }}"
+  environment:
+    CLOUDSDK_CORE_PROJECT: "{{ gcp_project }}"
+  tasks:
+    - name: Ensure gcloud CLI installed
+      ansible.builtin.command: gcloud version
+      changed_when: false
+    - name: Create temp file for GCP service account key
+      ansible.builtin.tempfile:
+        state: file
+        suffix: .json
+      register: sa_key_tmp
+    - name: Write GCP service account key to temp file
+      ansible.builtin.copy:
+        dest: "{{ sa_key_tmp.path }}"
+        content: "{{ gcp_sa_key_json }}"
+        mode: '0600'
+
+    - name: Ensure dist directory exists
+      ansible.builtin.file:
+        path: "{{ dist_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Verify function source exists
+      ansible.builtin.stat:
+        path: "{{ function_src_dir }}/function.rb"
+      register: fn_rb
+
+    - name: Fail if function.rb is missing
+      ansible.builtin.fail:
+        msg: "Expected {{ function_src_dir }}/function.rb to exist."
+      when: not fn_rb.stat.exists
+
+    - name: Build ZIP of function sources
+      # Includes function.rb and Gemfile files if present
+      ansible.builtin.archive:
+        path:
+          - "{{ function_src_dir }}/function.rb"
+          - "{{ function_src_dir }}/Gemfile"
+          - "{{ function_src_dir }}/Gemfile.lock"
+        dest: "{{ zip_path }}"
+        format: zip
+        exclude_path:
+          - "{{ function_src_dir }}/.bundle"
+      ignore_errors: true
+
+    - name: Rebuild ZIP with only present files (handles missing Gemfile files)
+      when: result_zip is failed
+      block:
+        - name: Gather present files
+          ansible.builtin.find:
+            paths: "{{ function_src_dir }}"
+            patterns:
+              - "function.rb"
+              - "Gemfile"
+              - "Gemfile.lock"
+            file_type: file
+          register: present_files
+
+        - name: Build ZIP from present files
+          ansible.builtin.archive:
+            path: "{{ present_files.files | map(attribute='path') | list }}"
+            dest: "{{ zip_path }}"
+            format: zip
+          register: result_zip
+      vars:
+        result_zip: {}
+
+    - name: Compute md5 of ZIP
+      ansible.builtin.command: "md5sum {{ zip_path }}"
+      register: md5sum_out
+      changed_when: false
+
+    - name: Set object name from md5
+      ansible.builtin.set_fact:
+        zip_md5: "{{ (md5sum_out.stdout | regex_search('^([0-9a-fA-F]+)')) }}"
+        object_name: "function-{{ (md5sum_out.stdout | regex_search('^([0-9a-fA-F]+)')) }}.zip"
+    - name: Check if object already exists using gcloud
+      ansible.builtin.command: >
+        gcloud storage objects describe gs://{{ gcs_bucket }}/{{ object_name }}
+        --format="value(name)"
+      register: obj_check
+      failed_when: false
+      changed_when: false
+
+    - name: Upload ZIP to GCS using gcloud (no arg splitting)
+      ansible.builtin.command:
+        argv:
+          - gcloud
+          - storage
+          - cp
+          - "{{ zip_path }}"
+          - "gs://{{ gcs_bucket }}/{{ object_name }}"
+          - --no-clobber
+          - --cache-control=no-store
+      when: obj_check.rc != 0
+      register: upload_result
+      changed_when: "'Uploading' in upload_result.stdout or 'Copying' in upload_result.stdout"
+      environment:
+        GOOGLE_APPLICATION_CREDENTIALS: "{{ sa_key_tmp.path }}"
+    - name: Debug location
+      ansible.builtin.debug:
+        msg:
+          - "Uploaded: gs://{{ gcs_bucket }}/{{ object_name }}"
+          - "ZIP MD5: {{ zip_md5 }}"

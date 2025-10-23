@@ -1,1 +1,8 @@
 bucket_name = "andrewbrownresume.org"
+function_name = "view_counter"
+api_id        = "view-counter-api"
+gateway_id    = "view-counter-gw"
+api_title    = "View Counter API"
+region       = "us-east1"
+function_bucket_name = "crc-func-12353"
+function_object_name = "function-37791bceee3eab153d2ef11cc15025b5.zip"
