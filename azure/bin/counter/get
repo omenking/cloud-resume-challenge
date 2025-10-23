@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 set -e
 
-curl http://localhost:7071/api/view_counter?name=Andrew
-curl https://viewcounterapp.azurewebsites.net/api/view_counter/view_counter?name=Andrew
+#curl http://localhost:7071/api/view_counter?name=Andrew
+curl https://viewcounterapp.azurewebsites.net/api/view_counter

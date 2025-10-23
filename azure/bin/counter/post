@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -e
+
+curl -X POST https://viewcounterapp.azurewebsites.net/api/view_counter
