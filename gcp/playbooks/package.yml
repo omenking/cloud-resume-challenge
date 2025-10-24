@@ -39,19 +39,19 @@
 
     - name: Verify function source exists
       ansible.builtin.stat:
-        path: "{{ function_src_dir }}/function.rb"
+        path: "{{ function_src_dir }}/app.rb"
       register: fn_rb
 
-    - name: Fail if function.rb is missing
+    - name: Fail if app.rb is missing
       ansible.builtin.fail:
-        msg: "Expected {{ function_src_dir }}/function.rb to exist."
+        msg: "Expected {{ function_src_dir }}/app.rb to exist."
       when: not fn_rb.stat.exists
 
     - name: Build ZIP of function sources
-      # Includes function.rb and Gemfile files if present
+      # Includes app.rb and Gemfile files if present
       ansible.builtin.archive:
         path:
-          - "{{ function_src_dir }}/function.rb"
+          - "{{ function_src_dir }}/app.rb"
           - "{{ function_src_dir }}/Gemfile"
           - "{{ function_src_dir }}/Gemfile.lock"
         dest: "{{ zip_path }}"
@@ -67,7 +67,7 @@
           ansible.builtin.find:
             paths: "{{ function_src_dir }}"
             patterns:
-              - "function.rb"
+              - "app.rb"
               - "Gemfile"
               - "Gemfile.lock"
             file_type: file

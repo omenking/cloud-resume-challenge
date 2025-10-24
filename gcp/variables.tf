@@ -12,15 +12,6 @@ variable "function_bucket_name" {
 variable "function_object_name" { 
   type = string
 }
-variable "api_id" { 
-  type = string
-}
-variable "gateway_id" { 
-  type = string
-}
-variable "api_title" { 
-  type = string
-}
 variable "region" { 
   type = string
 }
