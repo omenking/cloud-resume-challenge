@@ -144,3 +144,14 @@ Test our function before we package it.
 ```sh
 bundle exec functions-framework --target hello_http --port 8080
 ```
+
+## Resolve Protobuffer Google Issues
+
+docker run --rm -v "$PWD":/app -w /app ruby:3.4-bookworm bash -lc '
+  set -e
+  ruby -v
+  bundle -v || gem install bundler -N
+  bundle lock --add-platform x86_64-linux
+  bundle config set --local deployment true
+  bundle install --jobs 4 --retry 3
+  bundle info google-protobuf

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -e
+
+curl -X POST https://us-east1-cloud-resume-challenge-475514.cloudfunctions.net/viewcounter

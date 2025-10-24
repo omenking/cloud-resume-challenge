@@ -39,6 +39,7 @@ resource "google_project_service" "apis" {
     "eventarc.googleapis.com",
     "logging.googleapis.com",
     "storage.googleapis.com",
+    "firestore.googleapis.com",
   ])
   service = each.key
   disable_on_destroy = false
@@ -86,6 +87,35 @@ resource "google_cloud_run_service_iam_member" "public_invoker" {
 
   # Ensure the Cloud Run service from the function exists first
   depends_on = [google_cloudfunctions2_function.fn]
+}
+
+resource "google_firestore_database" "default" {
+  project = "cloud-resume-challenge-475514"
+  name = "(default)"
+  location_id = "nam5"
+  type        = "FIRESTORE_NATIVE"
+
+  # Make sure API is enabled first
+  depends_on = [google_project_service.apis]
+}
+
+resource "google_project_iam_member" "fn_firestore_user" {
+  project = "cloud-resume-challenge-475514"
+  role    = "roles/datastore.user"
+  member  = "serviceAccount:${google_service_account.fn_runtime.email}"
+}
+
+resource "google_firestore_document" "counter_seed" {
+  project     = "cloud-resume-challenge-475514"
+  database    = "(default)"
+  collection  = "counter"
+  document_id = "global"
+
+  fields = jsonencode({
+    count = { integerValue = 0 }
+  })
+
+  depends_on = [google_firestore_database.default]
 }
 
 # Helpful outputs

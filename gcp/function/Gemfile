@@ -5,3 +5,4 @@ source "https://rubygems.org"
 # gem "rails"
 gem "functions_framework"
 gem 'base64'
+gem "google-cloud-firestore"
