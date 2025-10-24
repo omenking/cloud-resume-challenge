@@ -133,3 +133,14 @@ EOF
 terraform init
 
 
+## Terraform Cloud and Workspaces
+
+- We need to remember to set the workspace directly on the task for terraform deploy or we'll get a mysterious error about TF_WORKSPACE
+
+## Testing the function
+
+Test our function before we package it.
+
+```sh
+bundle exec functions-framework --target hello_http --port 8080
+```
