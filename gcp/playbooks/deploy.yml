@@ -8,6 +8,7 @@
     - vaults/prod.yml
   vars:
     project_path: "{{ playbook_dir }}/../"
+    terraform_dir: "{{ project_path }}/.terraform/"
     tf_vars_file: "{{ project_path }}/terraform.tfvars"   # optional
 
   tasks:
@@ -23,6 +24,7 @@
         mode: '0600'
     - name: Terraform init/plan/apply
       community.general.terraform:
+        workspace: "gcs-andrewbrownresumeorg"
         project_path: "{{ project_path }}"
         force_init: true
         state: present

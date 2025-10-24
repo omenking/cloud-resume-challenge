@@ -1,4 +1,4 @@
-provider "google" {
+provider "google-beta" {
   project     = "cloud-resume-challenge-475514"
   region      = var.region
 }
@@ -71,8 +71,6 @@ resource "google_cloudfunctions2_function" "fn" {
     ingress_settings                 = "ALLOW_ALL"
     max_instance_request_concurrency = 10
   }
-
-  depends_on = [google_project_service.services]
 }
 
 
