@@ -1,0 +1,18 @@
+---
+- name: Run Invoke tasks locally
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  tasks:
+    - name: Render projects via invoke
+      ansible.builtin.command:
+        cmd: invoke render-blog
+      args:
+        chdir: ./backend
+
+    - name: Render blog via invoke
+      ansible.builtin.command:
+        cmd: invoke render-projects
+      args:
+        chdir: /backend

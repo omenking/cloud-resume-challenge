@@ -1,0 +1,26 @@
+name: "Build Static assets and uploads"
+on:
+  push:
+    paths:
+      - './backend/data/**/*.md'
+      - './frontend/src/data/**.json'
+jobs:
+  run-playbooks:
+    - name: Run playbook
+      uses: dawidd6/action-ansible-playbook@v5
+      with:
+        #directory: ./aws/playbooks/ # Optional, directory where playbooks live
+        playbook: ./aws/playbooks/gen.yml # Required, playbook filepath
+        configuration: |
+          [defaults]
+    - name: Run playbook
+      uses: dawidd6/action-ansible-playbook@v5
+      with:
+        #directory: ./aws/playbooks/ # Optional, directory where playbooks live
+        playbook: ./aws/playbooks/upload.yml # Required, playbook filepath
+        configuration: |
+          [defaults]
+        vault_password: ${{secrets.VAULT_PASSWORD}}
+        # Optional, galaxy requirements filepath
+        # does this assume the directory path above?
+        requirements: /.aws/requirements.yml
